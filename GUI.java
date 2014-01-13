@@ -28,6 +28,7 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.text.NumberFormatter;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 
 public class GUI {
@@ -44,7 +45,9 @@ public class GUI {
 	private JTextArea custList;
 	private JScrollPane listScrollPane;
 	private JTable table;
-	private DefaultTableModel tModel= new DefaultTableModel();
+	private DefaultTableModel tModel = new DefaultTableModel();
+	private String[] columnTitles = { "Address", "Contact No", "Name" };
+	private Customer cs = new Customer();
 
 	public GUI() {
 	}
@@ -52,7 +55,7 @@ public class GUI {
 	public void frame() {
 		final JFrame frame = new JFrame();
 		Container cp = frame.getContentPane();
- 
+
 		JPanel panel1 = new JPanel(new GridBagLayout());
 		GridBagConstraints c1 = new GridBagConstraints();
 		GridBagConstraints c2 = new GridBagConstraints();
@@ -69,7 +72,7 @@ public class GUI {
 		panel2.setBorder(new TitledBorder(new EtchedBorder(), "List"));
 		panel3.setBorder(new TitledBorder(new EtchedBorder(), "Customer"));
 
-		//Arrange components using GridBagConstarints
+		// Arrange components using GridBagConstarints
 		number = new JFormattedTextField(format);
 		number.setColumns(10);
 		c1.fill = GridBagConstraints.HORIZONTAL;
@@ -116,17 +119,18 @@ public class GUI {
 		c7.weightx = 0.01;
 
 		add = new JButton("Add");
-		//Add panels to container
+		// Add panels to container
 		cp.add(panel1, BorderLayout.NORTH);
 		cp.add(panel2, BorderLayout.CENTER);
 		cp.add(panel3, BorderLayout.SOUTH);
-		
-		custList=new JTextArea();
-		
-		listScrollPane=new JScrollPane(custList);
-		
-		
-		//Add components to panel
+
+		createTable();
+
+		// custList=new JTextArea();
+
+		listScrollPane = new JScrollPane(table);
+
+		// Add components to panel
 		panel1.add(l1, c4);
 		panel1.add(number, c1);
 		panel1.add(find, c7);
@@ -135,13 +139,30 @@ public class GUI {
 		panel1.add(l3, c6);
 		panel1.add(address, c3);
 		panel2.add(listScrollPane);
-		//panel2.add(custList);
+		// panel2.add(custList);
 		panel3.add(add);
-		
+
 		find.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				String num = number.getText();
-				JOptionPane.showMessageDialog(frame, num);
+				String custNum = number.getText(); 
+				int length = 9;
+
+				if(!custNum.isEmpty()){
+					if(custNum.length() < length){
+						JOptionPane.showMessageDialog(frame,
+								"Please enter correct contact number");
+					}
+				}else{
+					try {
+						ConnectDatabase con=new ConnectDatabase(); 
+						con.getConnected();
+						String info=con.findCustomer(custNum);
+						JOptionPane.showMessageDialog(frame, info);
+					} catch (SQLException e1) {
+						JOptionPane.showMessageDialog(frame, "The contact number is incorrect!" + "\n");
+					}
+				}
+
 			}
 		});
 		add.addActionListener(new ActionListener() {
@@ -150,28 +171,27 @@ public class GUI {
 				String custName = name.getText();
 				String custAdd = address.getText();
 				int length = 9;
-				try {
-					if (!custNum.isEmpty() && !custName.isEmpty()
-							&& !custAdd.isEmpty()) {
-						if (custNum.length() < length) {
-							JOptionPane.showMessageDialog(frame,
-									"Please enter correct contact number");
-						} else {
-							Customer cs = new Customer();
-							cs.setContactNo(custNum);
-							cs.setName(custName);
-							cs.setAddress(custAdd);
+				if (!custNum.isEmpty() && !custName.isEmpty()
+						&& !custAdd.isEmpty()) {
+					if (custNum.length() < length) {
+						JOptionPane.showMessageDialog(frame,
+								"Please enter correct contact number");
+					} else {
+						try {
 							ConnectDatabase con = new ConnectDatabase(custNum,
 									custName, custAdd);
 							con.getConnected();
-						}
-					} else {
-						JOptionPane.showMessageDialog(frame,
-								"Please enter all details!");
-					}
+							con.addCustomer();
+						
 
-				} catch (SQLException e1) {
-					JOptionPane.showMessageDialog(frame, e1.getMessage());
+						} catch (SQLException e1) {
+							JOptionPane.showMessageDialog(frame,
+									e1.getMessage());
+						}
+					}
+				} else {
+					JOptionPane.showMessageDialog(frame,
+							"Please enter all details!");
 				}
 			}
 		});
@@ -180,24 +200,31 @@ public class GUI {
 		frame.setVisible(true);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 	}
-	
-	public void createTable(){
-		/** 
+
+	public void createTable() {
+		/**
 		 * Creating Tables and modeling them
 		 */
-		new DefaultTableModel(){
+		new DefaultTableModel() {
 
 			/**
-			 * The following method is used to make cells non-editable for the given table model
+			 * The following method is used to make cells non-editable for the
+			 * given table model
 			 */
 			private static final long serialVersionUID = 1L;
+
 			public boolean isCellEditable(int row, int column) {
-				//all cells false
+				// all cells false
 				return false;
 			}
 		};
 		table = new JTable(tModel);
 		table.setModel(tModel);
+		tModel.setColumnIdentifiers(columnTitles);
+	}
+
+	public void getInfo() {
+
 	}
 
 }
