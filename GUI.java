@@ -12,6 +12,9 @@ import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.text.NumberFormat;
+import java.util.ArrayList;
+import java.util.EmptyStackException;
+
 import javax.swing.JButton;
 import javax.swing.JFormattedTextField;
 import javax.swing.JFrame;
@@ -24,30 +27,31 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.text.Document;
 import javax.swing.text.NumberFormatter;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-public class GUI {
-	private JFormattedTextField number;
-	private JTextField name;
-	private JTextField address;
+public class GUI implements DocumentListener {
+	private JTextField numberField;
+	private JTextField nameField;
+	private JTextField addressField;
 	private JLabel l1;
 	private JLabel l2;
 	private JLabel l3;
-	private JButton find;
 	private JButton add;
 	private JButton print;
 	private NumberFormat format;
-	private JTextArea custList;
+	private JTextArea CustOrder;
 	private JScrollPane listScrollPane;
 	private JTable table;
-	private DefaultTableModel tModel = new DefaultTableModel();
-	private String[] columnTitles = { "Address", "Contact No", "Name" };
-	private Customer cs = new Customer();
+	private String custNum;
+	private String custName;
 
 	public GUI() {
 	}
@@ -73,21 +77,21 @@ public class GUI {
 		panel3.setBorder(new TitledBorder(new EtchedBorder(), "Customer"));
 
 		// Arrange components using GridBagConstarints
-		number = new JFormattedTextField(format);
-		number.setColumns(10);
+		numberField = new JFormattedTextField(format);
+		numberField.setColumns(10);
 		c1.fill = GridBagConstraints.HORIZONTAL;
 		c1.gridx = 1;
 		c1.gridy = 0;
 		c1.weightx = 0.05;
 		c1.weighty = 0.05;
 
-		name = new JTextField();
+		nameField = new JTextField();
 		c2.fill = GridBagConstraints.HORIZONTAL;
 		c2.gridx = 1;
 		c2.gridy = 1;
 		c2.gridwidth = 1;
 
-		address = new JTextField();
+		addressField = new JTextField();
 		c3.fill = GridBagConstraints.HORIZONTAL;
 		c3.gridx = 1;
 		c3.gridy = 2;
@@ -111,20 +115,12 @@ public class GUI {
 		c6.gridy = 2;
 		c6.gridwidth = 1;
 
-		find = new JButton("Find");
-		c7.fill = GridBagConstraints.HORIZONTAL;
-		c7.gridx = 2;
-		c7.gridy = 0;
-		c7.gridwidth = 1;
-		c7.weightx = 0.01;
-
 		add = new JButton("Add");
 		// Add panels to container
+		add.setVisible(false);
 		cp.add(panel1, BorderLayout.NORTH);
 		cp.add(panel2, BorderLayout.CENTER);
 		cp.add(panel3, BorderLayout.SOUTH);
-
-		createTable();
 
 		// custList=new JTextArea();
 
@@ -132,44 +128,50 @@ public class GUI {
 
 		// Add components to panel
 		panel1.add(l1, c4);
-		panel1.add(number, c1);
-		panel1.add(find, c7);
+		panel1.add(numberField, c1);
+		panel1.add(add, c7);
 		panel1.add(l2, c5);
-		panel1.add(name, c2);
+		panel1.add(nameField, c2);
 		panel1.add(l3, c6);
-		panel1.add(address, c3);
+		panel1.add(addressField, c3);
 		panel2.add(listScrollPane);
 		// panel2.add(custList);
-		panel3.add(add);
+		// panel3.add(add);
 
-		find.addActionListener(new ActionListener() {
+		custNum = numberField.getText();
+
+		numberField.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				String custNum = number.getText(); 
-				int length = 9;
+				final String newline = "\n";
+				String custNum = numberField.getText();
+				ArrayList<String> info = null;
+				ConnectDatabase cd = new ConnectDatabase();
 
-				if(!custNum.isEmpty()){
-					if(custNum.length() < length){
-						JOptionPane.showMessageDialog(frame,
-								"Please enter correct contact number");
+				try {
+					cd.getConnected();
+					info = cd.findCustomer(custNum + newline);
+					if (info.isEmpty()) {
+						add.setVisible(true);
+					} else {
+						nameField.setText(info.get(1));
+						addressField.setText(info.get(2));
 					}
-				}else{
-					try {
-						ConnectDatabase con=new ConnectDatabase(); 
-						con.getConnected();
-						String info=con.findCustomer(custNum);
-						JOptionPane.showMessageDialog(frame, info);
-					} catch (SQLException e1) {
-						JOptionPane.showMessageDialog(frame, "The contact number is incorrect!" + "\n");
-					}
+
+				} catch (SQLException e2) {
+					JOptionPane.showMessageDialog(frame, e2.getMessage());
+				} catch (EmptyStackException e3) {
+					JOptionPane.showMessageDialog(frame, e3.getMessage());
 				}
-
 			}
 		});
+		numberField.getDocument().addDocumentListener(this);
+		numberField.getDocument().putProperty(custNum, "Text Field");
+
 		add.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				String custNum = number.getText();
-				String custName = name.getText();
-				String custAdd = address.getText();
+				String custNum = numberField.getText();
+				String custName = nameField.getText();
+				String custAdd = addressField.getText();
 				int length = 9;
 				if (!custNum.isEmpty() && !custName.isEmpty()
 						&& !custAdd.isEmpty()) {
@@ -182,7 +184,6 @@ public class GUI {
 									custName, custAdd);
 							con.getConnected();
 							con.addCustomer();
-						
 
 						} catch (SQLException e1) {
 							JOptionPane.showMessageDialog(frame,
@@ -201,30 +202,28 @@ public class GUI {
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 	}
 
-	public void createTable() {
-		/**
-		 * Creating Tables and modeling them
-		 */
-		new DefaultTableModel() {
-
-			/**
-			 * The following method is used to make cells non-editable for the
-			 * given table model
-			 */
-			private static final long serialVersionUID = 1L;
-
-			public boolean isCellEditable(int row, int column) {
-				// all cells false
-				return false;
-			}
-		};
-		table = new JTable(tModel);
-		table.setModel(tModel);
-		tModel.setColumnIdentifiers(columnTitles);
+	public void insertUpdate(DocumentEvent e) {
+		int len = e.getLength();
+		if (len == 10) {
+			updateLog(e, custName);
+		}
+		else{
+			numberField.setToolTipText("Please enter correct number");
+		}
 	}
 
-	public void getInfo() {
-
+	public void removeUpdate(DocumentEvent e) {
+		updateLog(e, "");
 	}
 
+	public void changedUpdate(DocumentEvent e) {
+		// Plain text components don't fire these events.
+	}
+
+	public void updateLog(DocumentEvent e, String action) {
+		Document doc = (Document) e.getDocument();
+		nameField.setText(action);
+		addressField.setText(action);
+		add.setVisible(false);
+	}
 }

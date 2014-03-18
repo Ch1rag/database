@@ -9,6 +9,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.EmptyStackException;
 
 public class ConnectDatabase {
 	private String contactNo;
@@ -60,21 +62,19 @@ public class ConnectDatabase {
 		ps.executeUpdate();
 		connection.close();
 	}
-	public String findCustomer(String number) throws SQLException{
-		String info=null;
-		if(number!=null){
+	public ArrayList<String> findCustomer(String number) throws SQLException, EmptyStackException{
+		ArrayList<String> info = new ArrayList<String>();
 			statement=connection.createStatement();
 			resultSet=statement.executeQuery("SELECT * from Customer"
-					+" WHERE Contact_No  = "+number);
+			+" WHERE Contact_No  = "+number);
 			while(resultSet.next()){
 				String contactNo=resultSet.getString("Contact_No");
 				String name=resultSet.getString("Name");
 				String address=resultSet.getString("Address");
-				info="Contact No:\t"+contactNo+"\n"+
-						"Name:\t"+name+"\n"+
-						"Address:\t"+address;
-			}
-		}
+				info.add(contactNo);
+				info.add(name);
+				info.add(address);		
+			}	
 		return info;
 	}
 }

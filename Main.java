@@ -8,9 +8,8 @@ public class Main {
 	 * @param args
 	 * @throws SQLException 
 	 */
-	public static void main(String[] args) throws SQLException {
-		
+	public static void main(String[] args){
 		GUI gui=new GUI();
-		gui.frame();	
+		gui.frame();		
 	}
 }
