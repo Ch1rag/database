@@ -2,6 +2,7 @@ package database;
 
 import java.awt.BorderLayout;
 import java.awt.Container;
+import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -52,7 +53,10 @@ public class GUI implements DocumentListener {
 	private JTable table;
 	private String custNum;
 	private String custName;
-
+	private JButton valuePack;
+	private JButton familyPack;
+	private JButton gourmetPack;
+	
 	public GUI() {
 	}
 
@@ -70,11 +74,12 @@ public class GUI implements DocumentListener {
 		GridBagConstraints c7 = new GridBagConstraints();
 
 		JPanel panel2 = new JPanel(new GridLayout());
-		JPanel panel3 = new JPanel(new GridLayout(1, 1));
-
+		JPanel panel3 = new JPanel(new GridLayout());
+		
 		panel1.setBorder(new TitledBorder(new EtchedBorder(), "Customer"));
 		panel2.setBorder(new TitledBorder(new EtchedBorder(), "List"));
-		panel3.setBorder(new TitledBorder(new EtchedBorder(), "Customer"));
+		panel3.setBorder(new TitledBorder(new EtchedBorder(), "Packs"));
+		//panel4.setBorder(new TitledBorder(new EtchedBorder(), "Customer"));
 
 		// Arrange components using GridBagConstarints
 		numberField = new JFormattedTextField(format);
@@ -121,6 +126,10 @@ public class GUI implements DocumentListener {
 		cp.add(panel1, BorderLayout.NORTH);
 		cp.add(panel2, BorderLayout.CENTER);
 		cp.add(panel3, BorderLayout.SOUTH);
+		
+		valuePack=new JButton("Value Pack");
+		familyPack=new JButton("Family Pack");
+		gourmetPack=new JButton("Gourmet Pack");
 
 		// custList=new JTextArea();
 
@@ -135,6 +144,9 @@ public class GUI implements DocumentListener {
 		panel1.add(l3, c6);
 		panel1.add(addressField, c3);
 		panel2.add(listScrollPane);
+		panel3.add(valuePack);
+		panel3.add(familyPack);
+		panel3.add(gourmetPack);
 		// panel2.add(custList);
 		// panel3.add(add);
 
@@ -196,8 +208,10 @@ public class GUI implements DocumentListener {
 				}
 			}
 		});
+		
+		
 		frame.setTitle("Order Form");
-		frame.setSize(300, 400);
+		frame.setSize(800,800);
 		frame.setVisible(true);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 	}
