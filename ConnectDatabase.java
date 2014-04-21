@@ -77,4 +77,20 @@ public class ConnectDatabase {
 			}	
 		return info;
 	}
+	
+	public ArrayList<String> newOrder(String type) throws SQLException, EmptyStackException{
+		ArrayList<String> pack = new ArrayList<String>();
+			statement=connection.createStatement();
+			resultSet=statement.executeQuery("SELECT * from "+type);
+			
+			while(resultSet.next()){
+				String name=resultSet.getString("Name");
+				String price=resultSet.getString("Price");
+				
+				pack.add(name);
+				pack.add(price);
+			}		
+		return pack;
+	}
+	
 }
